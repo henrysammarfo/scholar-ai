@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Scholar.AI Pitch Deck</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.3.1/reset.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.3.1/reveal.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.3.1/theme/white.min.css">
+    <!-- Theme used for syntax highlighting of code -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.3.1/plugin/highlight/monokai.min.css">
+    <style>
+      .reveal h1, .reveal h2, .reveal h3 { font-family: 'Inter', sans-serif; text-transform: none; }
+      .reveal { color: #1f2937; }
+      .gradient-text { background: linear-gradient(to right, #2563eb, #9333ea); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+      .slide-bg { background-color: #f9fafb; }
+      .feature-card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); text-align: left; }
+    </style>
+  </head>
+  <body>
+    <div class="reveal">
+      <div class="slides">
+        
+        <!-- Slide 1: Title -->
+        <section>
+          <div style="font-size: 3rem; font-weight: bold; margin-bottom: 20px;">Scholar.AI</div>
+          <h2 class="gradient-text">Agentic Intelligence</h2>
+          <p style="color: #6b7280; font-size: 1.2rem; margin-top: 40px;">
+            Orchestrating Autonomous Workflows for Deep Research
+          </p>
+          <div style="margin-top: 50px; font-size: 0.8rem; color: #9ca3af;">
+            Submission for Agent Arena Hackathon 2025
+          </div>
+        </section>
+
+        <!-- Slide 2: The Problem -->
+        <section>
+          <h3>The Problem</h3>
+          <div style="display: flex; gap: 20px; margin-top: 40px;">
+            <div class="feature-card" style="flex: 1;">
+              <h4>Fragmented Knowledge</h4>
+              <p style="font-size: 0.8em;">Researchers waste hours jumping between broken links, paywalls, and unverified data.</p>
+            </div>
+            <div class="feature-card" style="flex: 1;">
+              <h4>Shallow AI Chatbots</h4>
+              <p style="font-size: 0.8em;">Standard LLMs hallucinate and lack the ability to verify facts or plan complex tasks.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Slide 3: The Solution -->
+        <section>
+          <h3>The Solution: <span class="gradient-text">Agentic Workflow</span></h3>
+          <p>We don't just "chat". We <strong>Orchestrate</strong>.</p>
+          <ul style="text-align: left; font-size: 0.9em; margin-top: 30px; line-height: 1.6;">
+            <li>🤖 <strong>Orchestrator-Worker Pattern:</strong> A lead agent decomposes tasks.</li>
+            <li>🧠 <strong>IQ.wiki Integration:</strong> Blockchain-verified definitions.</li>
+            <li>💰 <strong>402 Payments:</strong> Agents pay for premium data autonomously.</li>
+            <li>🔄 <strong>Reflection Loops:</strong> Self-correcting output generation.</li>
+          </ul>
+        </section>
+
+        <!-- Slide 4: Architecture -->
+        <section>
+          <h3>Architecture</h3>
+          <div style="background: #1e293b; padding: 2rem; border-radius: 1rem; color: white; font-family: monospace; font-size: 0.8em;">
+            User Request <br>
+            &darr; <br>
+            [ROOT AGENT] -> Checks IQ.wiki <br>
+            &darr; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &searr; <br>
+            [WEB TOOL] &nbsp; &nbsp; [WRITER AGENT] <br>
+            (Tavily x3) &nbsp; &nbsp; (Synthesis) <br>
+            &darr; <br>
+            Final Report
+          </div>
+        </section>
+
+        <!-- Slide 5: Built With -->
+        <section>
+          <h3>Tech Stack</h3>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; font-size: 0.8em;">
+            <div class="feature-card">
+              <strong>Agent Engine</strong><br>
+              IQAI ADK-TS
+            </div>
+            <div class="feature-card">
+              <strong>Frontend</strong><br>
+              Next.js 15, TailwindCSS
+            </div>
+             <div class="feature-card">
+              <strong>Physics</strong><br>
+              Matter.js (Anti-Gravity UI)
+            </div>
+            <div class="feature-card">
+              <strong>Web3</strong><br>
+              Reown AppKit, Base Sepolia
+            </div>
+          </div>
+        </section>
+
+         <!-- Slide 6: Demo -->
+        <section>
+          <h3>Live Demo</h3>
+          <p>Experience the "Anti-Gravity" Interface.</p>
+          <p style="font-size: 0.7em; color: #6b7280;">https://scholar-ai-demo.vercel.app</p>
+          <img src="scholar_ai_logo_1765290248507.png" style="width: 100px; margin-top: 20px;">
+        </section>
+
+      </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.3.1/reveal.min.js"></script>
+    <script>
+      Reveal.initialize({
+        hash: true,
+        controls: true,
+        progress: true,
+        center: true,
+        transition: 'slide'
+      });
+    </script>
+  </body>
+</html>
