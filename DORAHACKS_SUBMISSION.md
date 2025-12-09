@@ -21,7 +21,7 @@ We built Scholar.AI entirely using the **Agent Development Kit for TypeScript (A
 5.  **Delivery:** The final report is streamed to the user in our unique physics-based UI.
 
 ## Links
-- **GitHub Repository:** [INSERT_YOUR_REPO_LINK_HERE]
+- **GitHub Repository:** https://github.com/henrysammarfo/scholar-ai
 - **Live Demo:** [INSERT_YOUR_VERCEL_LINK_HERE]
 
 ## Team
