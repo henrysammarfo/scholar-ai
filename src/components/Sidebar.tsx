@@ -10,7 +10,7 @@ import clsx from "clsx";
 export function Sidebar() {
     const { sessions, currentSessionId, createSession, switchSession, deleteSession } = useSession();
     const { isConnected } = useAccount();
-    const [isOpen, setIsOpen] = useState(true);
+    const [isOpen, setIsOpen] = useState(false);
 
     if (!isConnected) return null;
 

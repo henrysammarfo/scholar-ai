@@ -97,10 +97,15 @@ export function PhysicsItem({ children, id, x, y, width = 200, height = 100, cla
         // Create Body
         const body = Matter.Bodies.rectangle(x, y, width, height, {
             isStatic,
-            chamfer: { radius: 10 }, // Rounded corners physics
-            restitution: 0.5, // Bounciness
-            friction: 0.1
+            chamfer: { radius: 10 },
+            restitution: 0.1, // Less bouncy (was 0.5)
+            friction: 0.5,    // More friction (was 0.1)
+            frictionAir: 0.05, // High air resistance to stop spinning quickly
+            density: 0.05,    // Heavier
         });
+
+        // Prevent rotation for stability if desired, or just high damping
+        Matter.Body.setInertia(body, Infinity); // This stops it from rotating when hit
 
         Matter.World.add(engine.world, body);
         bodyRef.current = body;
