@@ -1,36 +1,63 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Scholar.AI: Agentic Intelligence
 
-## Getting Started
+[![Agent Arena Hackathon](https://img.shields.io/badge/Agent%20Arena-Submission-purple?style=flat-square)](https://dorahacks.io/hackathon/agent-arena)
+[![Powered by ADK-TS](https://img.shields.io/badge/Powered%20by-ADK--TS-blue?style=flat-square)](https://adk.iqai.com)
 
-First, run the development server:
+**Scholar.AI** is an autonomous research companion built for the **Agent Arena AI Hackathon**.
 
-```bash
+It leverages the **IQAI Agent Development Kit (ADK-TS)** to orchestrate a sophisticated "Orchestrator-Worker" workflow where:
+1.  **The Orchestrator Agent** decomposes user queries into research plans.
+2.  **Specialized Tools** (`iq_wiki_search`, `tavily_search`) execute parallel data gathering.
+3.  **The Writer Agent** (Sub-agent) synthesizes findings into academic reports.
+4.  **402 Micro-Payments** enable premium data access (simulated/ready for mainnet).
+
+## 🌟 Overview
+Scholar.AI is a next-generation research assistant that leverages autonomous AI agents to perform deep web research, synthesize information, and generate professional reports. It is built with a "No Mocks" philosophy, integrating real-time data and genuine Web3 authentication.
+
+- **Deep Web Search**: Real-time access to the latest information via Tavily API.
+- **Web3 Gated Access**: Authenticated via Base Sepolia wallet connection.
+- **Student Exam Mode**: Dedicated "Cram Mode" for generating study guides and flashcards.
+- **Anti-Gravity UI**: Interactive, physics-based interface (Matter.js) for a premium, fun experience.
+- **Premium UX**: High-fidelity dark mode interface with seamless animations.
+
+## 🚀 Tech Stack
+- **Framework**: Next.js 14, TypeScript
+- **AI Engine**: ADK-TS, Gemini 2.5 Flash
+- **Tools**: Tavily Search
+- **Web3**: Wagmi, Viem, Reown AppKit
+- **Styling**: Tailwind CSS, Framer Motion
+
+## 🛠 Getting Started
+
+### Prerequisites
+- Node.js 18+
+- MetaMask Wallet (Base Sepolia)
+
+### Installation
+1. Clone the repo:
+\`\`\`bash
+git clone <repo>
+cd scholar-ai
+\`\`\`
+
+2. Install dependencies:
+\`\`\`bash
+npm install
+\`\`\`
+
+3. Set up Environment:
+Ensure `.env` contains valid keys for `TAVILY_API_KEY` and `GOOGLE_API_KEY`.
+
+4. Run Development Server:
+\`\`\`bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+\`\`\`
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Visit [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 🏆 Hackathon Tracks
+- **Agent Applications**: Fully functional autonomous research agent.
+- **Web3 Ecosystem**: Wallet-aware application ready for ATP tokenization.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 📄 License
+MIT

@@ -5,19 +5,22 @@ export const maxDuration = 300; // Allow long timeouts for research
 
 export async function POST(req: NextRequest) {
     try {
-        const { message } = await req.json();
+        const { message, mode } = await req.json();
 
         // Initialize agent
         const { runner } = await getRootAgent();
 
-        // Auto-Pilot Mode: Drive the agent through the standard handshake
-        // 1. Initial greeting
+        // 1. Initial greeting (Silent or handled by agent)
         const greeting = await runner.ask("Hi");
-        console.log("Agent Greeting:", greeting);
 
-        // 2. Propose Topic
-        const topicResponse = await runner.ask(`I want to research: ${message}`);
-        console.log("Agent Topic Response:", topicResponse);
+        // 2. Propose Topic with Mode Context
+        let prompt = `I want to research: ${message}`;
+        if (mode === "exam") {
+            prompt += ". Please treat this as an 'Exam Cram' session. I need a study guide, flashcard concepts, and key definitions suitable for a university final exam. Focus on memorizable facts and core concepts.";
+        }
+
+        const topicResponse = await runner.ask(prompt);
+        console.log("Agent Context Set:", prompt);
 
         // 3. Confirm & Execute
         // The agent is programmed to start searching immediately after confirmation

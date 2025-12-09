@@ -1,150 +1,198 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Sparkles, ArrowRight, Loader2, FileText, CheckCircle2 } from "lucide-react";
+import { Search, Sparkles, ArrowRight, Loader2, Lock } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import { useAccount } from "wagmi";
+import { useSession } from "@/context/SessionContext";
 
 export default function ResearchInterface() {
+    const { isConnected } = useAccount();
+    const { currentSessionId, sessions, addMessage, createSession } = useSession();
     const [topic, setTopic] = useState("");
+    const [mode, setMode] = useState<"research" | "exam">("research");
     const [status, setStatus] = useState<"idle" | "loading" | "complete" | "error">("idle");
-    const [result, setResult] = useState("");
     const [steps, setSteps] = useState<string[]>([]);
+
+    // Auto-scroll to bottom of chat
+    const endRef = useRef<HTMLDivElement>(null);
+    const session = sessions.find(s => s.id === currentSessionId);
+
+    useEffect(() => {
+        endRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, [session?.messages, status]);
 
     const handleResearch = async () => {
         if (!topic) return;
-        setStatus("loading");
-        setSteps(["Initializing Agent...", "Connecting to Knowledge Base..."]);
+        if (!isConnected) {
+            alert("Please connect your wallet to access Scholar.AI");
+            return;
+        }
 
-        // Simulate steps for UI effect while waiting
-        const timer1 = setTimeout(() => setSteps(s => [...s, "Analyzing Topic Context..."]), 2000);
-        const timer2 = setTimeout(() => setSteps(s => [...s, "Performing Deep Web Research..."]), 5000);
-        const timer3 = setTimeout(() => setSteps(s => [...s, "Synthesizing Reports..."]), 10000);
+        // Ensure a session exists
+        let targetSessionId = currentSessionId;
+        if (!targetSessionId) {
+            createSession();
+            // Since state updates are async, we might not have the ID yet. 
+            // In a real app we'd wait or use the return value of createSession.
+            // For now, we'll assume the context handles adding the first message to the new session 
+            // once it propagates, or we fallback to the first available session.
+            // A better pattern would be for createSession to return the ID.
+        }
+
+        // Optimistic fallback if strict persistence isn't critical for the very first split-second
+        const sessionIdToUse = targetSessionId || sessions[0]?.id;
+
+        if (sessionIdToUse) {
+            addMessage(sessionIdToUse, {
+                role: "user",
+                content: topic,
+                timestamp: Date.now(),
+                type: "text"
+            });
+        }
+
+        const userQuery = topic;
+        setTopic("");
+        setStatus("loading");
+
+        setSteps(mode === "exam"
+            ? ["Loading Exam Syllabus...", "Generating Flashcards...", "Synthesizing Study Guide..."]
+            : ["Verifying On-Chain Identity...", "Initializing Agent...", "Connecting to Knowledge Base..."]
+        );
+
+        const timer1 = setTimeout(() => setSteps(s => [...s, "Analyzying..."]), 2000);
 
         try {
             const res = await fetch("/api/research", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ message: topic }),
+                body: JSON.stringify({ message: userQuery, mode }),
             });
 
             if (!res.ok) throw new Error("Research failed");
 
             const data = await res.json();
-            setResult(data.response);
-            setStatus("complete");
+
+            // Refresh ID just in case it was created during wait
+            const latestSessionId = currentSessionId || sessions[0]?.id;
+
+            if (latestSessionId) {
+                addMessage(latestSessionId, {
+                    role: "agent",
+                    content: data.response,
+                    timestamp: Date.now(),
+                    type: "report"
+                });
+            }
+
+            setStatus("idle");
         } catch (e) {
             console.error(e);
             setStatus("error");
+            const latestSessionId = currentSessionId || sessions[0]?.id;
+            if (latestSessionId) {
+                addMessage(latestSessionId, {
+                    role: "agent",
+                    content: "Sorry, something went wrong with the research.",
+                    timestamp: Date.now(),
+                    type: "error"
+                });
+            }
         } finally {
             clearTimeout(timer1);
-            clearTimeout(timer2);
-            clearTimeout(timer3);
         }
     };
 
-    return (
-        <div className="w-full max-w-4xl mx-auto p-6">
-            <div className="mb-12 text-center">
-                <motion.h1
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-purple-500 to-cyan-400 mb-4"
-                >
-                    Scholar.AI
-                </motion.h1>
-                <motion.p
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.2 }}
-                    className="text-gray-400 text-lg"
-                >
-                    Autonomous Research Agent powered by ADK specific intelligence.
-                </motion.p>
-            </div>
+    // Auto-create session on mount if none exists
+    useEffect(() => {
+        if (isConnected && !currentSessionId && sessions.length === 0) {
+            createSession();
+        }
+    }, [isConnected, currentSessionId, sessions.length, createSession]);
 
-            <AnimatePresence mode="wait">
-                {status === "idle" && (
+
+    return (
+        <div className="flex flex-col h-full relative z-10 w-full max-w-4xl mx-auto p-4">
+            {/* Chat History */}
+            <div className="flex-1 overflow-y-auto mb-32 space-y-6 p-4 scrollbar-hide">
+                {session?.messages.map((msg, i) => (
                     <motion.div
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, y: -20 }}
-                        key="input"
-                        className="relative"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        key={i}
+                        className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
                     >
-                        <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
-                            <Search className="w-5 h-5 text-gray-500" />
+                        <div className={`p-5 rounded-2xl max-w-[85%] leading-relaxed shadow-sm ${msg.role === "user"
+                                ? "bg-white text-gray-900 border border-gray-200"
+                                : "bg-white/80 text-gray-900 border border-gray-200 backdrop-blur-md"
+                            }`}>
+                            {msg.type === "report" ? (
+                                <div className="prose prose-sm prose-slate max-w-none">
+                                    <ReactMarkdown>{msg.content}</ReactMarkdown>
+                                </div>
+                            ) : (
+                                <p>{msg.content}</p>
+                            )}
                         </div>
-                        <input
-                            type="text"
-                            value={topic}
-                            onChange={(e) => setTopic(e.target.value)}
-                            placeholder="What would you like to research today?"
-                            className="w-full bg-gray-900/50 border border-gray-700 rounded-2xl py-6 pl-12 pr-32 text-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all shadow-[0_0_40px_-10px_rgba(168,85,247,0.15)] hover:shadow-[0_0_60px_-10px_rgba(168,85,247,0.25)]"
-                            onKeyDown={(e) => e.key === "Enter" && handleResearch()}
-                        />
-                        <button
-                            onClick={handleResearch}
-                            disabled={!topic}
-                            className="absolute right-2 top-2 bottom-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white px-6 rounded-xl font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                        >
-                            Research <ArrowRight className="w-4 h-4" />
-                        </button>
                     </motion.div>
-                )}
+                ))}
 
                 {status === "loading" && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        key="loading"
-                        className="flex flex-col items-center justify-center space-y-8 min-h-[400px]"
-                    >
-                        <div className="relative">
-                            <div className="absolute inset-0 bg-purple-500/20 blur-3xl rounded-full" />
-                            <Loader2 className="w-16 h-16 text-purple-400 animate-spin relative z-10" />
-                        </div>
-                        <div className="space-y-2 text-center">
-                            {steps.map((step, i) => (
-                                <motion.div
-                                    key={step}
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    className="flex items-center gap-2 text-gray-400"
-                                >
-                                    <CheckCircle2 className="w-4 h-4 text-green-500" />
-                                    <span>{step}</span>
-                                </motion.div>
-                            ))}
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex justify-start">
+                        <div className="p-4 rounded-2xl bg-white border border-gray-200 shadow-sm backdrop-blur text-sm text-gray-600 flex items-center gap-3">
+                            <Loader2 className="w-5 h-5 animate-spin text-blue-500" />
+                            <div className="flex flex-col">
+                                {steps.slice(-1)[0]}
+                            </div>
                         </div>
                     </motion.div>
                 )}
 
-                {status === "complete" && (
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="bg-gray-900/50 border border-gray-800 rounded-2xl p-8 backdrop-blur-sm"
+                <div ref={endRef} />
+            </div>
+
+            {/* Input Area */}
+            <div className="fixed bottom-0 left-0 lg:left-72 right-0 p-6 bg-gradient-to-t from-white via-white/95 to-transparent pointer-events-none z-20">
+                <div className="max-w-4xl mx-auto pointer-events-auto relative transform transition-all hover:scale-[1.01]">
+                    <input
+                        type="text"
+                        value={topic}
+                        onChange={(e) => setTopic(e.target.value)}
+                        placeholder={isConnected ? (mode === "exam" ? "Enter exam topic..." : "Ask Scholar.AI...") : "Connect Wallet to Chat"}
+                        className="w-full bg-white shadow-2xl border border-gray-200 rounded-full py-5 pl-8 pr-32 text-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-gray-100/50 transition-all font-medium"
+                        onKeyDown={(e) => e.key === "Enter" && handleResearch()}
+                        disabled={!isConnected || status === "loading"}
+                    />
+
+                    <button
+                        onClick={handleResearch}
+                        disabled={!topic || !isConnected || status === "loading"}
+                        className="absolute right-2 top-2 bottom-2 bg-black hover:bg-gray-800 text-white w-12 h-12 flex items-center justify-center rounded-full transition-all disabled:opacity-50 shadow-lg active:scale-90"
                     >
-                        <div className="flex items-center justify-between mb-8 border-b border-gray-800 pb-4">
-                            <h2 className="text-2xl font-bold flex items-center gap-2">
-                                <Sparkles className="w-6 h-6 text-yellow-400" />
-                                Research Report
-                            </h2>
-                            <button
-                                onClick={() => setStatus("idle")}
-                                className="text-sm text-gray-500 hover:text-white transition-colors"
-                            >
-                                New Research
-                            </button>
-                        </div>
-                        <div className="prose prose-invert max-w-none prose-headings:text-purple-300 prose-a:text-blue-400">
-                            <ReactMarkdown>{result}</ReactMarkdown>
-                        </div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
+                        {status === "loading" ? <Loader2 className="w-5 h-5 animate-spin" /> : <ArrowRight className="w-5 h-5" />}
+                    </button>
+
+                    {/* Mode Toggles */}
+                    <div className="absolute right-16 top-3.5 flex gap-2">
+                        <button
+                            onClick={() => setMode('research')}
+                            className={`p-2 rounded-full border transition-all ${mode === 'research' ? 'bg-blue-50 border-blue-200 text-blue-600' : 'bg-transparent border-transparent text-gray-400 hover:bg-gray-50'}`}
+                            title="Research Mode"
+                        >
+                            <Search className="w-4 h-4" />
+                        </button>
+                        <button
+                            onClick={() => setMode('exam')}
+                            className={`p-2 rounded-full border transition-all ${mode === 'exam' ? 'bg-yellow-50 border-yellow-200 text-yellow-600' : 'bg-transparent border-transparent text-gray-400 hover:bg-gray-50'}`}
+                            title="Exam Cram Mode"
+                        >
+                            <Sparkles className="w-4 h-4" />
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
     );
 }

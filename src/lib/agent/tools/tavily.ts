@@ -54,7 +54,7 @@ export const tavilySearchTool = createTool({
 
         // Perform the web search and include the content of the URLs in the results
         const response = await tavily.search(query, {
-            includeRawContent: true, // "markdown" doesn't seem to be a valid option in some versions, check type if fail.
+            includeRawContent: false,
             // Actually relying on includeRawContent: true sometimes gives HTML. 
             // The sample used "markdown" but strictly typed @tavily/core might complain if specific version used.
             // I'll stick to logic similar but check compilation.

@@ -4,7 +4,8 @@ import { WagmiProvider, createConfig, http } from "wagmi";
 import { baseSepolia } from "wagmi/chains";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { inject } from '@vercel/analytics';
-import { coinbaseWallet, injected, walletConnect } from 'wagmi/connectors'
+import { coinbaseWallet, injected, walletConnect } from 'wagmi/connectors';
+import { SessionProvider } from "@/context/SessionContext";
 
 const projectId = process.env.NEXT_PUBLIC_REOWN_PROJECT_ID || "4928e0af6a150cdf19c97b582c535b81";
 
@@ -26,7 +27,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
     return (
         <WagmiProvider config={config}>
             <QueryClientProvider client={queryClient}>
-                {children}
+                <SessionProvider>
+                    {children}
+                </SessionProvider>
             </QueryClientProvider>
         </WagmiProvider>
     );
