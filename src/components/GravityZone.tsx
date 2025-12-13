@@ -6,69 +6,80 @@ import { PhysicsContext } from "./PhysicsContext";
 
 export function GravityZone({ children }: { children: React.ReactNode }) {
     const sceneRef = useRef<HTMLDivElement>(null);
-    const engineRef = useRef<Matter.Engine | null>(null);
-    const [ready, setReady] = useState(false);
+    const [engine, setEngine] = useState<Matter.Engine | null>(null);
 
     useEffect(() => {
         if (!sceneRef.current) return;
 
         // Setup Engine
         const Engine = Matter.Engine,
-            Runner = Matter.Runner,
             MouseConstraint = Matter.MouseConstraint,
             Mouse = Matter.Mouse,
             World = Matter.World,
-            Bodies = Matter.Bodies;
+            Bodies = Matter.Bodies,
+            Composite = Matter.Composite;
 
-        const engine = Engine.create();
-        engineRef.current = engine;
+        const _engine = Engine.create();
 
         // Set standard earth gravity
-        engine.world.gravity.y = 1;
+        _engine.world.gravity.y = 1;
 
         // Boundaries
-        const width = window.innerWidth;
-        const height = window.innerHeight;
-        const wallOptions = { isStatic: true, render: { visible: false } };
+        const updateBoundaries = () => {
+            if (!_engine.world) return;
+            const width = window.innerWidth;
+            const height = window.innerHeight;
 
-        const ground = Bodies.rectangle(width / 2, height + 50, width, 100, wallOptions);
-        const ceiling = Bodies.rectangle(width / 2, -500, width, 100, wallOptions); // High ceiling to drop items in
-        const leftWall = Bodies.rectangle(-50, height / 2, 100, height * 2, wallOptions);
-        const rightWall = Bodies.rectangle(width + 50, height / 2, 100, height * 2, wallOptions);
+            const bodies = Composite.allBodies(_engine.world);
+            const existingWalls = bodies.filter(b => b.label === "Wall");
+            Composite.remove(_engine.world, existingWalls);
 
-        World.add(engine.world, [ground, ceiling, leftWall, rightWall]);
+            const wallOptions = { isStatic: true, render: { visible: false }, label: "Wall" };
+            const ground = Bodies.rectangle(width / 2, height + 50, width, 100, wallOptions);
+            const leftWall = Bodies.rectangle(-50, height / 2, 100, height * 5, wallOptions);
+            const rightWall = Bodies.rectangle(width + 50, height / 2, 100, height * 5, wallOptions);
 
-        // Mouse Interaction
+            Composite.add(_engine.world, [ground, leftWall, rightWall]);
+        };
+
+        updateBoundaries();
+
+        // Mouse Interface
         const mouse = Mouse.create(sceneRef.current);
-        const mouseConstraint = MouseConstraint.create(engine, {
+        const mouseConstraint = MouseConstraint.create(_engine, {
             mouse: mouse,
             constraint: {
-                stiffness: 0.1, // Softer drag
+                stiffness: 0.2,
                 render: { visible: false }
             }
         });
+        World.add(_engine.world, mouseConstraint);
 
-        // Fix mouse offset for scrolling/relative positioning if needed, 
-        // but fixed position overlay usually doesn't need it.
-        // mouse.pixelRatio = window.devicePixelRatio;
+        // MANUAL LOOP for reliability
+        let animationFrameId: number;
+        const tick = () => {
+            Engine.update(_engine, 1000 / 60);
+            animationFrameId = requestAnimationFrame(tick);
+        };
+        tick();
 
-        World.add(engine.world, mouseConstraint);
+        setEngine(_engine);
 
-        // Run
-        const runner = Runner.create();
-        Runner.run(runner, engine);
-        setReady(true);
+        const handleResize = () => updateBoundaries();
+        window.addEventListener("resize", handleResize);
 
         return () => {
-            Runner.stop(runner);
-            Engine.clear(engine);
+            window.removeEventListener("resize", handleResize);
+            cancelAnimationFrame(animationFrameId);
+            Engine.clear(_engine);
+            setEngine(null);
         };
     }, []);
 
     return (
-        <PhysicsContext.Provider value={{ engine: engineRef.current || null }}>
-            <div ref={sceneRef} className="absolute inset-0 overflow-hidden z-0 bg-transparent pointer-events-none">
-                {ready && children}
+        <PhysicsContext.Provider value={{ engine }}>
+            <div ref={sceneRef} className="absolute inset-0 overflow-hidden z-0 bg-transparent pointer-events-auto">
+                {engine && children}
             </div>
         </PhysicsContext.Provider>
     );
@@ -98,14 +109,23 @@ export function PhysicsItem({ children, id, x, y, width = 200, height = 100, cla
         const body = Matter.Bodies.rectangle(x, y, width, height, {
             isStatic,
             chamfer: { radius: 10 },
-            restitution: 0.1, // Less bouncy (was 0.5)
-            friction: 0.5,    // More friction (was 0.1)
-            frictionAir: 0.05, // High air resistance to stop spinning quickly
-            density: 0.05,    // Heavier
+            restitution: 0.4, // Bouncier
+            friction: 0.1,
+            frictionAir: 0.01, // Standard air resistance (was 0.05 too sticky)
+            density: 0.05,
         });
 
-        // Prevent rotation for stability if desired, or just high damping
-        Matter.Body.setInertia(body, Infinity); // This stops it from rotating when hit
+        // Ensure it doesn't sleep
+        Matter.Sleeping.set(body, false);
+        // @ts-ignore
+        body.allowSleeping = false;
+
+        // Initial kick to ensure movement
+        Matter.Body.setVelocity(body, { x: 0, y: 2 });
+        Matter.Body.setAngularVelocity(body, Math.random() * 0.02 - 0.01);
+
+        // Allow natural rotation
+        // Matter.Body.setInertia(body, Infinity);
 
         Matter.World.add(engine.world, body);
         bodyRef.current = body;
@@ -126,7 +146,10 @@ export function PhysicsItem({ children, id, x, y, width = 200, height = 100, cla
 
         return () => {
             cancelAnimationFrame(animId);
-            if (bodyRef.current) Matter.World.remove(engine.world, bodyRef.current);
+            if (bodyRef.current) {
+                Matter.World.remove(engine.world, bodyRef.current);
+                bodyRef.current = null;
+            }
         };
     }, [engine, x, y, width, height, isStatic]);
 

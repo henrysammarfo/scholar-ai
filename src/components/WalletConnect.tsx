@@ -4,10 +4,22 @@ import { useAppKit } from "@reown/appkit/react";
 import { useAccount, useDisconnect } from "wagmi";
 import { Loader2, Wallet, LogOut } from "lucide-react";
 
+import { useRouter, usePathname } from "next/navigation";
+import { useEffect } from "react";
+
 export default function WalletConnect() {
     const { open } = useAppKit();
     const { address, isConnected, isConnecting } = useAccount();
     const { disconnect } = useDisconnect();
+    const router = useRouter();
+
+    const pathname = usePathname();
+
+    useEffect(() => {
+        if (isConnected && pathname === "/") {
+            router.push("/dashboard");
+        }
+    }, [isConnected, router, pathname]);
 
     if (isConnecting) {
         return (

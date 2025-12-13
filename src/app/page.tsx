@@ -42,7 +42,7 @@ export default function Home() {
                 {/* Physics Background - Lower Layer */}
                 <GravityZone>
                     {/* Main UI Element - Lowered */}
-                    <PhysicsItem id="hero-ui" x={window.innerWidth / 2} y={window.innerHeight * 0.6} width={900} height={600} isStatic={false}>
+                    <PhysicsItem id="hero-ui" x={window.innerWidth / 2} y={window.innerHeight * 0.6} width={900} height={600}>
                         <div className="w-full h-full bg-white/60 backdrop-blur-md border border-white/40 rounded-[2.5rem] p-2 shadow-2xl ring-1 ring-black/5 overflow-hidden">
                             {/* Mini version of app as demo */}
                             <div className="w-full h-full flex flex-col bg-white/50 rounded-[2rem] overflow-hidden shadow-inner border border-gray-100">
@@ -56,7 +56,7 @@ export default function Home() {
                                     <div className="flex-1 text-center text-xs text-gray-400 font-medium">scholar-agent.ai</div>
                                 </div>
                                 <div className="flex-1 relative overflow-hidden">
-                                    <ResearchInterface />
+                                    <ResearchInterface isDemo={true} />
                                 </div>
                             </div>
                         </div>

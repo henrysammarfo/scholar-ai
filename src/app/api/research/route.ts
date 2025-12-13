@@ -1,38 +1,68 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getRootAgent } from "@/lib/agent";
+import { scheduleRequest } from "@/lib/request-queue";
 
 export const maxDuration = 300; // Allow long timeouts for research
 
 export async function POST(req: NextRequest) {
     try {
-        const { message, mode } = await req.json();
+        const { message, mode, walletAddress } = await req.json();
 
-        // Initialize agent
-        const { runner } = await getRootAgent();
-
-        // 1. Initial greeting (Silent or handled by agent)
-        const greeting = await runner.ask("Hi");
-
-        // 2. Propose Topic with Mode Context
-        let prompt = `I want to research: ${message}`;
-        if (mode === "exam") {
-            prompt += ". Please treat this as an 'Exam Cram' session. I need a study guide, flashcard concepts, and key definitions suitable for a university final exam. Focus on memorizable facts and core concepts.";
+        // Validate input
+        if (!message || message.trim().length === 0) {
+            return NextResponse.json(
+                { error: "Message is required" },
+                { status: 400 }
+            );
         }
 
-        const topicResponse = await runner.ask(prompt);
-        console.log("Agent Context Set:", prompt);
+        // Queue the research request to prevent API quota exhaustion
+        const result = await scheduleRequest(
+            async () => {
+                // Initialize agent
+                const { runner } = await getRootAgent();
 
-        // 3. Confirm & Execute
-        // The agent is programmed to start searching immediately after confirmation
-        const finalReport = await runner.ask("Yes, please proceed!");
-        console.log("Agent Final Report Generated");
+                // 2. Direct Execution with Context
+                // We bypass the conversational confirmation to ensure reliability
+                let prompt = `RESEARCH_NOW: ${message}`;
 
-        return NextResponse.json({
-            response: finalReport,
-            debug: { greeting, topicResponse }
-        });
+                if (mode === "exam") {
+                    prompt += "\nCONTEXT: Treat this as an 'Exam Cram' session. I need a study guide, flashcard concepts, and key definitions suitable for a university final exam. Focus on memorizable facts and core concepts.";
+                }
+
+                console.log("Agent Prompt:", prompt);
+                const finalReport = await runner.ask(prompt);
+                console.log("Agent Final Report Generated");
+
+                return {
+                    response: finalReport,
+                    debug: { prompt }
+                };
+            },
+            {
+                id: `research-${Date.now()}`,
+                priority: mode === "exam" ? 6 : 5 // Exam mode gets slightly higher priority
+            }
+        );
+
+        return NextResponse.json(result);
     } catch (error: any) {
         console.error("Agent Error:", error);
-        return NextResponse.json({ error: error.message }, { status: 500 });
+
+        // Handle specific error types
+        if (error.message?.includes('rate limit') || error.message?.includes('quota')) {
+            return NextResponse.json(
+                {
+                    error: "API quota exceeded. Please try again in a few moments.",
+                    retryAfter: 60
+                },
+                { status: 429 }
+            );
+        }
+
+        return NextResponse.json(
+            { error: error.message || "An error occurred during research" },
+            { status: 500 }
+        );
     }
 }

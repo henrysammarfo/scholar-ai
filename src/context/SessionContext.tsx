@@ -21,7 +21,7 @@ export type Session = {
 type SessionContextType = {
     sessions: Session[];
     currentSessionId: string | null;
-    createSession: () => void;
+    createSession: () => string;
     switchSession: (id: string) => void;
     addMessage: (sessionId: string, message: Message) => void;
     deleteSession: (id: string) => void;
@@ -31,17 +31,17 @@ type SessionContextType = {
 const SessionContext = createContext<SessionContextType | undefined>(undefined);
 
 export function SessionProvider({ children }: { children: React.ReactNode }) {
-    const { address } = useAccount();
+    const { address, status } = useAccount();
     const [sessions, setSessions] = useState<Session[]>([]);
     const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
 
     // Load sessions from LocalStorage when wallet connects
     useEffect(() => {
-        if (!address) {
-            setSessions([]);
-            setCurrentSessionId(null);
-            return;
-        }
+        // If we are connecting or reconnecting, DO NOT clear the sessions yet.
+        if (status === 'connecting' || status === 'reconnecting') return;
+
+        // If connected but no address (rare), wait or return
+        if (!address) return;
 
         const key = `scholar_ai_sessions_${address}`;
         const stored = localStorage.getItem(key);
@@ -75,6 +75,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
         };
         setSessions((prev) => [newSession, ...prev]);
         setCurrentSessionId(newSession.id);
+        return newSession.id;
     };
 
     const switchSession = (id: string) => {
