@@ -2,7 +2,7 @@ import { LlmAgent } from "@iqai/adk";
 import { STATE_KEYS } from "../../constants";
 
 export const getAnalysisAgent = () => {
-    const model = process.env.LLM_MODEL || "gemini-2.5-flash";
+    const model = process.env.LLM_MODEL || "gemini-1.5-flash";
 
     const analysisAgent = new LlmAgent({
         name: "analysis_report_agent",

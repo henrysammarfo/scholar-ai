@@ -8,7 +8,7 @@ import { iqWikiSearchTool } from "./tools/iq-wiki";
 
 export const getRootAgent = async () => {
     const writerAgent = await getWriterAgent();
-    const model = process.env.LLM_MODEL || "gemini-2.5-flash-lite";
+    const model = process.env.LLM_MODEL || "gemini-1.5-flash";
 
     return AgentBuilder.create("ai_research_assistant")
         .withDescription(
