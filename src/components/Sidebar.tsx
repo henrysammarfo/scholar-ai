@@ -2,7 +2,7 @@
 
 import { useSession } from "@/context/SessionContext";
 import { useAccount, useDisconnect } from "wagmi";
-import { MessageSquarePlus, Clock, Settings, LogOut, MessageSquare, Trash2 } from "lucide-react";
+import { MessageSquarePlus, Clock, Settings, LogOut, MessageSquare, Trash2, Menu } from "lucide-react";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import clsx from "clsx";
